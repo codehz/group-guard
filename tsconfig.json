@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ESNext"],
+    "types": [],
+  },
+  "references": [
+    { "path": "./tsconfig.workers.json" },
+    { "path": "./tsconfig.bun.json" },
+    { "path": "./tsconfig.frontend.json" }
+  ]
+}

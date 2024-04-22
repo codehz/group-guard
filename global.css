@@ -1,0 +1,197 @@
+/* Box sizing rules */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  font-size: inherit;
+  font-family: inherit;
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+}
+
+/* Prevent font size inflation */
+html {
+  -moz-text-size-adjust: none;
+  -webkit-text-size-adjust: none;
+  text-size-adjust: none;
+  color-scheme: var(--tg-color-scheme);
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: manipulation;
+  cursor: default;
+}
+
+/* Remove default margin in favour of better control in authored CSS */
+body,
+h1,
+h2,
+h3,
+h4,
+p,
+figure,
+blockquote,
+dl,
+dd {
+  margin-block-end: 0;
+}
+
+/* Remove list styles on ul, ol elements with a list role, which suggests default styling will be removed */
+ul[role="list"],
+ol[role="list"] {
+  list-style: none;
+}
+
+/* Set core body defaults */
+body {
+  min-height: 100vh;
+  line-height: 1.5;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  text-wrap: balance;
+}
+
+:link {
+  text-decoration-skip-ink: auto;
+  color: var(--tg-theme-link-color);
+}
+
+img,
+picture {
+  max-width: 100%;
+  display: block;
+}
+
+body,
+ol,
+ul,
+menu,
+p,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+dl,
+button,
+input,
+textarea {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  font-size: 100%;
+  vertical-align: baseline;
+  background: transparent;
+  font-weight: inherit;
+  line-height: inherit;
+}
+
+input,
+textarea,
+select {
+  font: inherit;
+  color: inherit;
+
+  -webkit-user-select: revert;
+  user-select: revert;
+}
+
+textarea {
+  form-sizing: normal;
+  field-sizing: content;
+  resize: none;
+  overflow-y: visible;
+}
+
+:target {
+  scroll-margin-block: 5ex;
+}
+
+body {
+  background-color: var(--tg-theme-secondary-bg-color);
+  color: var(--tg-theme-text-color);
+  font-family: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji",
+    "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  margin: 0;
+  overflow: hidden;
+}
+
+#svg {
+  position: absolute;
+  top: -9999px;
+  left: -9999px;
+}
+
+#root {
+  height: 100vh;
+  display: grid;
+  contain: strict;
+}
+
+#root > div {
+  grid-area: 1 / 1;
+  user-select: none;
+}
+
+#root > div:last-child {
+  user-select: all;
+  opacity: 1;
+}
+
+button {
+  display: flex;
+  -webkit-appearance: none;
+  appearance: none;
+  border: none;
+  background-color: var(--tg-theme-button-color, black);
+  color: var(--tg-theme-button-text-color, white);
+  border-radius: 100px;
+  padding: 0.4em 0.8em;
+  align-items: center;
+  justify-content: center;
+}
+
+#toast-host {
+  container-type: size;
+  position: fixed;
+  overscroll-behavior: contain;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  z-index: 2;
+}
+
+#toast-host > * {
+  grid-column: 1;
+  grid-row: 1;
+  padding: 10px;
+  border-radius: 10px;
+  color: var(--tg-theme-text-color);
+  position: relative;
+  z-index: 1;
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  text-align: center;
+  line-height: 1.5;
+}
+
+#toast-host > *::before {
+  content: "";
+  border-radius: 10px;
+  background-color: var(--tg-theme-secondary-bg-color);
+  z-index: -1;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  opacity: 0.5;
+}

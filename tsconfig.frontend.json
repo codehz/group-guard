@@ -1,0 +1,8 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "types": ["telegram-web-app", "react/canary", "react-dom/canary"],
+    "outDir": "dist"
+  },
+  "include": ["src/**/*", "pages/**/*", "shared/**/*"]
+}
