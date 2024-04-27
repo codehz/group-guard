@@ -45,7 +45,7 @@ export function FormPage({
     }
   });
   return (
-    <WindowFrame title={page.subtitle}>
+    <WindowFrame title={page.subtitle || "验证问题"}>
       <Form onSubmit={confirm} className={styles.FormPage}>
         {page.fields.map((field) => (
           <FieldRenderer
