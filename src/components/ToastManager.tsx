@@ -2,7 +2,7 @@ import { AnimatePresence, motion, type Variants } from "framer-motion";
 import { nanoid } from "nanoid";
 import {
   createContext,
-  useContext,
+  use,
   useId,
   useMemo,
   useState,
@@ -30,10 +30,10 @@ type ToastState = {
   handle: number;
 };
 
-export const useToast = () => useContext(ToastContext);
+export const useToast = () => use(ToastContext);
 
 export const useToastMessage = () => {
-  const toast = useContext(ToastContext);
+  const toast = use(ToastContext);
   const key = useId();
   return (node: ReactNode, timeout = 1000) =>
     node ? toast.show(node, { key, timeout }) : toast.hide(key);

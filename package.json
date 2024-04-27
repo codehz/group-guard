@@ -6,8 +6,8 @@
     "@cloudflare/workers-types": "^4.20240405.0",
     "@types/bun": "latest",
     "@types/csso": "^5.0.4",
-    "@types/react": "npm:types-react@beta",
-    "@types/react-dom": "npm:types-react-dom@beta",
+    "@types/react": "latest",
+    "@types/react-dom": "latest",
     "@types/telegram-web-app": "^7.2.1",
     "csso": "^5.0.5",
     "prettier": "^3.2.5",
@@ -40,7 +40,7 @@
     "emulate-tab": "^1.2.1",
     "fast-equals": "^5.0.1",
     "formik": "^2.4.5",
-    "framer-motion": "^11.0.28",
+    "framer-motion": "^11.1.7",
     "grammy": "^1.22.4",
     "js-sha256": "^0.11.0",
     "mutative": "^1.0.3",
@@ -61,8 +61,6 @@
   },
   "resolutions": {
     "react": "19.0.0-beta-94eed63c49-20240425",
-    "react-dom": "19.0.0-beta-94eed63c49-20240425",
-    "@types/react": "npm:types-react@beta",
-    "@types/react-dom": "npm:types-react-dom@beta"
+    "react-dom": "19.0.0-beta-94eed63c49-20240425"
   }
 }

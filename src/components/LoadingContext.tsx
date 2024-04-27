@@ -1,7 +1,7 @@
 import { AnimatePresence } from "framer-motion";
 import {
   createContext,
-  useContext,
+  use,
   useId,
   useState,
   type Dispatch,
@@ -35,7 +35,7 @@ export function LoadingContext({ children }: { children: ReactNode }) {
 }
 
 export function useLoading(loading: boolean) {
-  const setState = useContext(Context);
+  const setState = use(Context);
   const id = useId();
   useTruthyEffect(loading, () => {
     setState((old) => ({ ...old, [id]: true }));

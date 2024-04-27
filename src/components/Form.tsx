@@ -2,7 +2,7 @@ import { memoMotion } from "@/component";
 import { useEventHandler } from "@/hooks/useEventHandler";
 import {
   createContext,
-  useContext,
+  use,
   useMemo,
   useRef,
   useState,
@@ -68,5 +68,5 @@ export const Form = memoMotion(function Form(
 });
 
 export function useForm() {
-  return useContext(Context);
+  return use(Context);
 }

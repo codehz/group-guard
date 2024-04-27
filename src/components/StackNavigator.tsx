@@ -1,3 +1,4 @@
+import { SWRErrorBoundary } from "@/components/SWRErrorBoundary";
 import { useEventHandler } from "@/hooks/useEventHandler";
 import { useInstance } from "@/hooks/useInstance";
 import { useTruthyEffect } from "@/hooks/useTruthyEffect";
@@ -7,8 +8,8 @@ import { create } from "mutative";
 import { nanoid } from "nanoid";
 import {
   createContext,
+  use,
   useCallback,
-  useContext,
   useEffect,
   useState,
   type DependencyList,
@@ -19,11 +20,7 @@ import {
   type ReactNode,
   type SetStateAction,
 } from "react";
-import { ErrorBoundary, type FallbackProps } from "react-error-boundary";
 import { stdMotion } from "../component";
-import { EmbedDialog } from "./EmbedDialog";
-import { useSWRConfig } from "swr";
-import { SWRErrorBoundary } from "@/components/SWRErrorBoundary";
 
 export type PageOptions = {
   preventClose?: boolean;
@@ -261,7 +258,7 @@ export function StackNavigator({ children }: { children: ReactNode }) {
 }
 
 export function usePageContext() {
-  return useContext(PageContext);
+  return use(PageContext);
 }
 
 export function useMainButtonClicked(
@@ -310,11 +307,11 @@ export function useMainButtonLoadingIndicator(loading: boolean) {
 }
 
 export function useStackNavigator() {
-  return useContext(Context);
+  return use(Context);
 }
 
 export function useIsActive() {
-  return useContext(ActiveContext);
+  return use(ActiveContext);
 }
 
 export function useActiveEffect(fn: EffectCallback) {
