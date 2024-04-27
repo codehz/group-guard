@@ -128,10 +128,12 @@ callbackHandler.callbackQuery(/^accept:.*/, async (ctx) => {
     .first<{ chat: number; user: number }>();
   if (res) {
     await unrestrictChatMember(res.chat, res.user);
-    if (ctx.callbackQuery.message) {
-      const message = ctx.callbackQuery.message;
-      waitUntil(deleteMessageSafe(message.chat.id, message.message_id));
-    }
+  } else {
+    await ctx.answerCallbackQuery("目标会话不存在或已被其他管理员处理");
+  }
+  if (ctx.callbackQuery.message) {
+    const message = ctx.callbackQuery.message;
+    waitUntil(deleteMessageSafe(message.chat.id, message.message_id));
   }
 });
 callbackHandler.callbackQuery(/^reject:.*/, async (ctx) => {
@@ -149,10 +151,12 @@ callbackHandler.callbackQuery(/^reject:.*/, async (ctx) => {
     await ctx.api.banChatMember(result.chat, result.user, {
       until_date: (Date.now() / 1000 + ban_duration) | 0,
     });
-    if (ctx.callbackQuery.message) {
-      const message = ctx.callbackQuery.message;
-      waitUntil(deleteMessageSafe(message.chat.id, message.message_id));
-    }
+  } else {
+    await ctx.answerCallbackQuery("目标会话不存在或已被其他管理员处理");
+  }
+  if (ctx.callbackQuery.message) {
+    const message = ctx.callbackQuery.message;
+    waitUntil(deleteMessageSafe(message.chat.id, message.message_id));
   }
 });
 bot.command("start", async (ctx) => {
