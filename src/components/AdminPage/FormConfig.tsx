@@ -20,7 +20,13 @@ import { useSWRConfig } from "swr";
 import { ConfigEditorLoader } from "./ConfigEditor";
 import { FormEditor } from "./FormEditor";
 
-export function FormConfig({ chat }: { chat: Chat.SupergroupGetChat }) {
+export function FormConfig({
+  chat,
+  language,
+}: {
+  chat: Chat.SupergroupGetChat;
+  language?: string;
+}) {
   const navigator = useStackNavigator();
   const handleNewForm = useEventHandler(() => {
     navigator.push(<FormEditor chat={chat} />, {
@@ -199,9 +205,7 @@ const FormCard = memoForward(function FormCard(
     >
       <div className={style({ display: "flex" })}>
         <div className={style({ display: "grid", gap: 4, flex: 1 })}>
-          <div className={styles.NoOverflow}>
-            {content.tag ?? "未命名"}
-          </div>
+          <div className={styles.NoOverflow}>{content.tag ?? "未命名"}</div>
           <div className={classNames(styles.Small, styles.NoOverflow)}>
             {content.description}
           </div>

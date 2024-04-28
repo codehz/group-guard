@@ -240,6 +240,11 @@ bot.command("reload", async (ctx) => {
     await ctx.reply("reloaded");
   }
 });
+bot.command("langtest", async (ctx) => {
+  const user = ctx.from;
+  if (!user) return;
+  ctx.reply("language: " + user.language_code);
+});
 bot.command("test", async (ctx) => {
   const user = ctx.from;
   if (!user) return;

@@ -16,7 +16,7 @@ const challengeProcedure = t.procedure.use(({ ctx, next }) => {
 });
 const chatProcedure = t.procedure.input(z.object({ chat_id: z.number() }));
 const formProcedure = chatProcedure.input(
-  z.object({ form_id: z.string().length(21) })
+  z.object({ form_id: z.string().length(21), language: z.string().optional() })
 );
 
 export const router = t.router({
@@ -141,53 +141,83 @@ export const router = t.router({
           });
           return;
         }),
-      /** 读取配置信息 */
-      config: chatProcedure.query(async ({ ctx, input }) => {
+      /** 获取配置语言列表 */
+      config_languages: chatProcedure.query(async ({ ctx, input }) => {
         const result = await globalEnv.DB.prepare(
-          "SELECT value FROM chat_config WHERE chat = ?1 AND EXISTS (SELECT 1 FROM chat_admin WHERE chat = ?1 AND user = ?2)"
+          "SELECT language FROM chat_config WHERE chat = ?1 AND EXISTS (SELECT 1 FROM chat_admin WHERE chat = ?1 AND user = ?2)"
         )
           .bind(input.chat_id, ctx.user.id)
-          .first<{ value: string }>();
-        return result?.value
-          ? (JSON.parse(result.value) as Partial<ChatConfig>)
-          : {};
+          .all<{ language: string }>();
+        return result.results.map((item) => item.language);
       }),
+      /** 读取配置信息 */
+      config: chatProcedure
+        .input(z.object({ language: z.string().optional() }))
+        .query(async ({ ctx, input }) => {
+          const result = await globalEnv.DB.prepare(
+            "SELECT value FROM chat_config WHERE chat = ?1 AND language = ?2 AND EXISTS (SELECT 1 FROM chat_admin WHERE chat = ?1 AND user = ?3)"
+          )
+            .bind(input.chat_id, input.language ?? "", ctx.user.id)
+            .first<{ value: string }>();
+          return result?.value
+            ? (JSON.parse(result.value) as Partial<ChatConfig>)
+            : {};
+        }),
       /** 更新配置 */
       update_config: chatProcedure
-        .input(z.object({ config: ChatConfig.partial() }))
+        .input(
+          z.object({
+            config: ChatConfig.partial(),
+            language: z.string().optional(),
+          })
+        )
         .mutation(async ({ ctx, input }) => {
           await audit(input.chat_id, ctx.user.id, {
             type: "chat_config_update",
+            language: input.language,
             value: input.config,
           }).run();
           return;
         }),
       /** 列出表单 */
-      list_form: chatProcedure.query(async ({ ctx, input }) => {
-        const result = await globalEnv.DB.prepare(
-          "SELECT id, content, enabled, (deleted_at is not null) as deleted, created_at, updated_at FROM form WHERE chat = ?1 AND EXISTS (SELECT 1 FROM chat_admin WHERE chat = ?1 AND user = ?2) ORDER BY deleted ASC, updated_at DESC"
-        )
-          .bind(input.chat_id, ctx.user.id)
-          .all<{
-            id: string;
-            content: string;
-            enabled: boolean;
-            deleted: boolean;
-            created_at: string;
-            updated_at: string;
-          }>();
-        return result.results.map((item) => ({
-          ...item,
-          enabled: !!item.enabled,
-          content: JSON.parse(item.content) as FormType,
-        }));
-      }),
+      list_form: chatProcedure
+        .input(z.object({ language: z.string().optional() }))
+        .query(async ({ ctx, input }) => {
+          const result = await globalEnv.DB.prepare(
+            "SELECT id, content, enabled, (deleted_at is not null) as deleted, created_at, updated_at FROM form WHERE chat = ?1 AND language = ?2 AND EXISTS (SELECT 1 FROM chat_admin WHERE chat = ?1 AND user = ?3) ORDER BY deleted ASC, updated_at DESC"
+          )
+            .bind(input.chat_id, input.language ?? "", ctx.user.id)
+            .all<{
+              id: string;
+              content: string;
+              enabled: boolean;
+              deleted: boolean;
+              created_at: string;
+              updated_at: string;
+            }>();
+          return result.results.map((item) => ({
+            ...item,
+            enabled: !!item.enabled,
+            content: JSON.parse(item.content) as FormType,
+          }));
+        }),
+      /** 删除语言配置 */
+      drop_language: chatProcedure
+        .input(z.object({ language: z.string().min(1, "不能删除默认语言") }))
+        .mutation(async ({ ctx, input }) => {
+          await audit(input.chat_id, ctx.user.id, {
+            type: "drop_language",
+            language: input.language,
+          }).run();
+          return;
+        }),
       /** 表单编辑api */
       form: t.router({
         /** 启用表单 */
         enable: formProcedure.mutation(async ({ ctx, input }) => {
           await audit(input.chat_id, ctx.user.id, {
             type: "form_enable",
+            language: input.language,
             id: input.form_id,
           }).run();
           return;
@@ -199,6 +229,7 @@ export const router = t.router({
             await audit(input.chat_id, ctx.user.id, {
               type: "form_update",
               id: input.form_id,
+              language: input.language,
               content: input.content,
             }).run();
             return;
@@ -207,6 +238,7 @@ export const router = t.router({
         delete: formProcedure.mutation(async ({ ctx, input }) => {
           await audit(input.chat_id, ctx.user.id, {
             type: "form_delete",
+            language: input.language,
             id: input.form_id,
           }).run();
           return;
@@ -215,6 +247,7 @@ export const router = t.router({
         recover: formProcedure.mutation(async ({ ctx, input }) => {
           await audit(input.chat_id, ctx.user.id, {
             type: "form_recover",
+            language: input.language,
             id: input.form_id,
           }).run();
           return;
@@ -223,6 +256,7 @@ export const router = t.router({
         delete_forever: formProcedure.mutation(async ({ ctx, input }) => {
           await audit(input.chat_id, ctx.user.id, {
             type: "form_delete_forever",
+            language: input.language,
             id: input.form_id,
           }).run();
           return;
