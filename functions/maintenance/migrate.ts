@@ -51,6 +51,25 @@ const stmts = [
     created_at timestamp not null default current_timestamp,
     updated_at timestamp not null default current_timestamp,
     primary key (chat, user)) without rowid;`,
+  `create table if not exists session_log (
+    id INTEGER PRIMARY KEY,
+    chat chat_id not null,
+    user user_id not null,
+    data json not null,
+    created_at timestamp not null default current_timestamp
+  )`,
+  `create trigger if not exists trigger_session_delete before delete on session begin
+    insert into session_log (chat, user, data) values (old.chat, old.user, json_object(
+      'user_info', json(old.user_info),
+      'user_chat_info', json(old.user_chat_info),
+      'user_language', old.user_language,
+      'nonce', old.nonce,
+      'welcome_message', old.welcome_message,
+      'form', json(old.form),
+      'answer', json(old.answer),
+      'created_at', old.created_at,
+      'updated_at', old.updated_at
+    )); end;`,
   `create unique index if not exists session_nonce on session (nonce);`,
   `create table if not exists audit (
     chat chat_id not null,
