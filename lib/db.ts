@@ -44,20 +44,12 @@ export async function queryChatInfo(chat: number, user: number) {
             type: "left",
           },
         },
-        config: {
-          join: {
-            table: "chat_config",
-            on: ["info.chat = config.chat"],
-            type: "left",
-          },
-        },
       },
       {
-        chat: "info.info",
-        nonce: "json_quote(session.nonce)",
-        form: "session.form",
-        config: "config.value",
-        answer: "session.answer",
+        chat: "json(info.info)",
+        nonce: "session.nonce",
+        form: "json(session.form)",
+        answer: "json(session.answer)",
       }
     )
   )
@@ -68,7 +60,6 @@ export async function queryChatInfo(chat: number, user: number) {
     chat: Chat.SupergroupGetChat;
     nonce: string | null;
     form: FormType | null;
-    config: ChatConfig | null;
     answer: Record<string, string | boolean> | null;
   };
 }
@@ -141,11 +132,11 @@ export async function listSession(user: number, chat: number) {
         },
       },
       {
-        user: "session.user_info",
-        form: "session.form",
-        answer: "session.answer",
-        created_at: "json_quote(session.created_at)",
-        updated_at: "json_quote(session.updated_at)",
+        user: "json(session.user_info)",
+        form: "json(session.form)",
+        answer: "json(session.answer)",
+        created_at: "session.created_at",
+        updated_at: "session.updated_at",
       }
     )
   )

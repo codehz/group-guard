@@ -36,7 +36,7 @@ export function jsonQb<
   S extends Record<string, string>,
 >(sources: F, select: S) {
   const json_object = Object.entries(select)
-    .map(([k, v]) => `'${k}', json(${v})`)
+    .map(([k, v]) => `'${k}', ${v}`)
     .join(", ");
   const parsed = groupBy(
     Object.entries(sources).map(([name, obj]) => ({ ...obj, name })),
@@ -44,7 +44,7 @@ export function jsonQb<
     "join"
   );
   const from = [
-    ...parsed.from.map(({ name, from }) => as(from.table, name)),
+    parsed.from.map(({ name, from }) => as(from.table, name)).join(', '),
     ...parsed.join.map(
       ({ name, join }) =>
         `${join.type.toUpperCase()} JOIN ${as(join.table, name)} ON ${and(join.on)}`

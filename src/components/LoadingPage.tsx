@@ -19,6 +19,20 @@ export function LoadingPage(props: {
   );
 }
 
+function Replace({
+  children,
+  options,
+}: {
+  children: ReactNode;
+  options?: PageOptions;
+}) {
+  const navigator = useStackNavigator();
+  useEffect(() => {
+    navigator.replace(children, options);
+  }, []);
+  return null;
+}
+
 function Loader({
   load,
   options,
@@ -26,10 +40,6 @@ function Loader({
   load: () => ReactNode;
   options?: PageOptions;
 }) {
-  const navigator = useStackNavigator();
   const page = load();
-  useEffect(() => {
-    navigator.replace(page, options);
-  }, []);
-  return null;
+  return <Replace options={options}>{page}</Replace>;
 }

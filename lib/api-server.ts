@@ -32,6 +32,26 @@ export const router = t.router({
       }
       return await queryChatInfo(ctx.target_chat, ctx.user.id);
     }),
+    config: challengeProcedure.query(async ({ ctx }) => {
+      const value = await globalEnv.DB.prepare(
+        "SELECT json_group_object(language, json(value)) json FROM chat_config WHERE chat = ?1"
+      )
+        .bind(ctx.target_chat)
+        .first<{ json: string }>();
+      return value
+        ? (JSON.parse(value.json) as Record<string, ChatConfig>)
+        : {};
+    }),
+    reload: challengeProcedure
+      .input(z.object({ language: z.string().optional(), nonce: z.string() }))
+      .mutation(async ({ ctx, input }) => {
+        const result = await globalEnv.DB.prepare(
+          "UPDATE session SET form = coalesce((SELECT form FROM form WHERE form.chat = ?1 AND form.language = coalesce(?4, '')), session.form) WHERE chat = ?1 AND user = ?2 AND nonce = ?3"
+        )
+          .bind(ctx.target_chat, ctx.user.id, input.nonce, input.language)
+          .run();
+        return result.meta.changes;
+      }),
     submit: challengeProcedure
       .input(
         z.object({

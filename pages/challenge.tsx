@@ -1,19 +1,34 @@
 import { api } from "@/api";
 import { WelcomePage } from "@/components/ChallengePage/WelcomePage";
 import { LoadingPage } from "@/components/LoadingPage";
+import { selectLanguage } from "@shared/select-language";
+import { useState } from "react";
+
+api.challenge.config.preload();
+api.challenge.info.preload();
 
 export default function ChallengePage() {
+  const [languageOverride, setLanguageOverride] = useState<string>();
   return (
     <LoadingPage
       load={() => {
+        const { data: configData } = api.challenge.config.useSWR(void 0, {
+          suspense: true,
+          shouldRetryOnError: false,
+        });
         const { data } = api.challenge.info.useSWR(void 0, {
           suspense: true,
           shouldRetryOnError: false,
         });
+        const language =
+          languageOverride ??
+          Telegram.WebApp.initDataUnsafe.user!.language_code;
+        const config = selectLanguage(configData, language);
+        console.log(config);
         return (
           <WelcomePage
             chat={data!.chat}
-            config={data!.config ?? undefined}
+            config={config}
             form={data!.form ?? undefined}
             nonce={data!.nonce ?? undefined}
             answer={data!.answer ?? {}}
