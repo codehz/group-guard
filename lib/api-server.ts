@@ -74,10 +74,9 @@ export const router = t.router({
           ).bind(ctx.target_chat),
         ]);
         if (form_info.results.length) {
-          const userid = ctx.user.id + "";
           const lines = [
             // prettier-ignore
-            html`用户 <a href="tg://user?id=${userid}">${ctx.user.first_name}</a>完成了答题`,
+            html`用户 <a href="tg://user?id=${ctx.user.id}">${ctx.user.first_name}</a>完成了答题`,
           ];
           const [{ form, nonce }] = form_info.results as {
             form: string;

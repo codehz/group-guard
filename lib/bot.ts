@@ -53,7 +53,7 @@ async function sendWelcomeMessage(chatId: number, user: User) {
   } = await bot.api.getUserProfilePhotos(user.id, { limit: 1 });
   const sent = await bot.api.sendMessage(
     chatId,
-    html`欢迎 <a href="tg://user?id=${user.id + ""}">${user.first_name}</a>`,
+    html`欢迎 <a href="tg://user?id=${user.id}">${user.first_name}</a>`,
     {
       reply_markup: new InlineKeyboard().row(
         InlineKeyboard.url(
