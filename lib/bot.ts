@@ -63,7 +63,7 @@ async function sendWelcomeMessage(chatId: number, user: User) {
       ),
       protect_content: true,
       disable_notification: true,
-      entities: [],
+      parse_mode: "HTML",
     }
   );
   await globalEnv.DB.prepare(
