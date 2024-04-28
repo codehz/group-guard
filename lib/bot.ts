@@ -5,6 +5,7 @@ import type { Chat, User } from "grammy/types";
 import { nanoid } from "nanoid";
 import { WorkersCacheStorage } from "workers-cache-storage";
 import { globalEnv, waitUntil } from "./env";
+import { html } from "@lib/html-format";
 
 export const bot = new Bot(Bun.env.BOT_TOKEN, {
   botInfo: JSON.parse(Bun.env.BOT_INFO),
@@ -52,7 +53,7 @@ async function sendWelcomeMessage(chatId: number, user: User) {
   } = await bot.api.getUserProfilePhotos(user.id, { limit: 1 });
   const sent = await bot.api.sendMessage(
     chatId,
-    "欢迎 " + user.first_name + "!",
+    html`欢迎 <a href="tg://user?id=${user.id + ""}">${user.first_name}</a>`,
     {
       reply_markup: new InlineKeyboard().row(
         InlineKeyboard.url(
