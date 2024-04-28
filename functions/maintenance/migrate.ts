@@ -43,6 +43,7 @@ const stmts = [
     user user_id not null,
     user_info json not null,
     user_chat_info json,
+    user_language text default '',
     nonce nanoid not null,
     welcome_message int,
     form json,

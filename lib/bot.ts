@@ -66,7 +66,7 @@ async function sendWelcomeMessage(chatId: number, user: User) {
     }
   );
   await globalEnv.DB.prepare(
-    "INSERT INTO session (chat, user, user_info, welcome_message, nonce, form) VALUES (?1, CAST(?2 -> 'id' AS INTEGER), ?2, ?3, ?4, (SELECT content FROM form WHERE form.chat = ?1 AND form.enabled AND form.deleted_at is null))"
+    "INSERT INTO session (chat, user, user_info, user_language, welcome_message, nonce, form) VALUES (?1, CAST(?2 -> 'id' AS INTEGER), ?2, COALESCE(?2 ->> 'language_code', ''), ?3, ?4, COALESCE((SELECT content FROM form WHERE form.chat = ?1 AND form.enabled AND form.deleted_at is null AND form.language LIKE (?2 ->> 'language_code') || '%' ORDER BY form.language DESC LIMIT 1), (SELECT content FROM form WHERE form.chat = ?1 AND form.enabled AND form.deleted_at is null ORDER BY form.language LIMIT 1)))"
   )
     .bind(chatId, JSON.stringify({ ...user, photos }), sent.message_id, nonce)
     .run();

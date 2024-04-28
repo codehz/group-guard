@@ -110,10 +110,12 @@ const SessionCard = memo(function SessionCard({
   const avatar = user.photos[user.photos.length - 1]?.file_id;
   const accept = api.admin.chat.accept.useSWRMutation();
   const reject = api.admin.chat.reject.useSWRMutation();
-  const handleAccept = useEventHandler(async () => {
+  const handleAccept = useEventHandler(async (e: React.MouseEvent) => {
+    e.stopPropagation();
     await accept.trigger({ chat_id: chat.id, nonce }).catch(errorReport);
   });
-  const handleReject = useEventHandler(async () => {
+  const handleReject = useEventHandler(async (e: React.MouseEvent) => {
+    e.stopPropagation();
     await reject.trigger({ chat_id: chat.id, nonce }).catch(errorReport);
   });
   const navigator = useStackNavigator();

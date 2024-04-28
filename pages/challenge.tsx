@@ -8,7 +8,6 @@ api.challenge.config.preload();
 api.challenge.info.preload();
 
 export default function ChallengePage() {
-  const [languageOverride, setLanguageOverride] = useState<string>();
   return (
     <LoadingPage
       load={() => {
@@ -21,10 +20,8 @@ export default function ChallengePage() {
           shouldRetryOnError: false,
         });
         const language =
-          languageOverride ??
-          Telegram.WebApp.initDataUnsafe.user!.language_code;
+          data!.language ?? Telegram.WebApp.initDataUnsafe.user!.language_code;
         const config = selectLanguage(configData, language);
-        console.log(config);
         return (
           <WelcomePage
             chat={data!.chat}
