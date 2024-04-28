@@ -1,11 +1,11 @@
 import { queryChatConfig } from "@lib/db";
+import { html } from "@lib/html-format";
 import { DefaultChatConfig, type ChatConfig } from "@shared/types";
 import { Bot, InlineKeyboard } from "grammy";
 import type { Chat, User } from "grammy/types";
 import { nanoid } from "nanoid";
 import { WorkersCacheStorage } from "workers-cache-storage";
 import { globalEnv, waitUntil } from "./env";
-import { html } from "@lib/html-format";
 
 export const bot = new Bot(Bun.env.BOT_TOKEN, {
   botInfo: JSON.parse(Bun.env.BOT_INFO),
@@ -129,35 +129,63 @@ callbackHandler.callbackQuery(/^accept:.*/, async (ctx) => {
     .first<{ chat: number; user: number }>();
   if (res) {
     await unrestrictChatMember(res.chat, res.user);
+    if (ctx.callbackQuery.message) {
+      const message = ctx.callbackQuery.message;
+      waitUntil(
+        ctx.api.editMessageReplyMarkup(message.chat.id, message.message_id, {
+          reply_markup: new InlineKeyboard().add(
+            InlineKeyboard.url("查看用户", `tg://user?id=${res.user + ""}`)
+          ),
+        })
+      );
+    }
   } else {
     await ctx.answerCallbackQuery("目标会话不存在或已被其他管理员处理");
-  }
-  if (ctx.callbackQuery.message) {
-    const message = ctx.callbackQuery.message;
-    waitUntil(deleteMessageSafe(message.chat.id, message.message_id));
+    if (ctx.callbackQuery.message) {
+      const message = ctx.callbackQuery.message;
+      waitUntil(
+        ctx.api.editMessageReplyMarkup(message.chat.id, message.message_id, {
+          reply_markup: new InlineKeyboard(),
+        })
+      );
+    }
   }
 });
 callbackHandler.callbackQuery(/^reject:.*/, async (ctx) => {
   const nonce = ctx.callbackQuery.data.slice("reject:".length);
-  const result = await globalEnv.DB.prepare(
+  const res = await globalEnv.DB.prepare(
     "DELETE FROM session WHERE nonce = ? AND EXISTS (SELECT 1 FROM chat_admin WHERE chat = session.chat AND user = ?2) RETURNING chat, user, (SELECT value FROM chat_config WHERE chat_config.chat = session.chat) AS config"
   )
     .bind(nonce, ctx.from.id)
     .first<{ chat: number; user: number; config?: string }>();
-  if (result) {
+  if (res) {
     const { ban_duration } = {
       ...DefaultChatConfig,
-      ...(result.config ? JSON.parse(result.config) : {}),
+      ...(res.config ? JSON.parse(res.config) : {}),
     } as ChatConfig;
-    await ctx.api.banChatMember(result.chat, result.user, {
+    await ctx.api.banChatMember(res.chat, res.user, {
       until_date: (Date.now() / 1000 + ban_duration) | 0,
     });
+    if (ctx.callbackQuery.message) {
+      const message = ctx.callbackQuery.message;
+      waitUntil(
+        ctx.api.editMessageReplyMarkup(message.chat.id, message.message_id, {
+          reply_markup: new InlineKeyboard().add(
+            InlineKeyboard.url("查看用户", `tg://user?id=${res.user + ""}`)
+          ),
+        })
+      );
+    }
   } else {
     await ctx.answerCallbackQuery("目标会话不存在或已被其他管理员处理");
-  }
-  if (ctx.callbackQuery.message) {
-    const message = ctx.callbackQuery.message;
-    waitUntil(deleteMessageSafe(message.chat.id, message.message_id));
+    if (ctx.callbackQuery.message) {
+      const message = ctx.callbackQuery.message;
+      waitUntil(
+        ctx.api.editMessageReplyMarkup(message.chat.id, message.message_id, {
+          reply_markup: new InlineKeyboard(),
+        })
+      );
+    }
   }
 });
 bot.command("start", async (ctx) => {
