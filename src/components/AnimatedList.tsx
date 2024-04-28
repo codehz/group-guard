@@ -35,9 +35,7 @@ function ItemRendererImpl<T, R, K extends string | number, X = void>(
     extractKey: (item: R) => K;
     tree: Tree<T>;
     ItemComponent: ComponentType<{ value: R; tree: Tree<T> } & X>;
-    onClickItem?: (
-      info: { key: K; value: R; tree: Tree<T> }
-    ) => void;
+    onClickItem?: (info: { key: K; value: R; tree: Tree<T> }) => void;
     custom: X;
   },
   ref: ForwardedRef<ElementRef<"div">>
@@ -123,9 +121,7 @@ export function AnimatedList<T, R, K extends string | number, X = void>(
     extractShallow: (item: T) => R;
     keyEquals: (key: K, item: T) => boolean;
     ItemComponent: ComponentType<{ value: R; tree: Tree<T> } & X>;
-    onClickItem?: (
-      info: { key: K; value: R; tree: Tree<T> }
-    ) => void;
+    onClickItem?: (info: { key: K; value: R; tree: Tree<T> }) => void;
     custom: X;
   },
   ref: ForwardedRef<ElementRef<"div">>
