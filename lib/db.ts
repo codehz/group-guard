@@ -48,7 +48,6 @@ export async function queryChatInfo(chat: number, user: number) {
       {
         chat: "json(info.info)",
         nonce: "session.nonce",
-        language: "session.user_language",
         form: "json(session.form)",
         answer: "json(session.answer)",
       }
@@ -60,7 +59,6 @@ export async function queryChatInfo(chat: number, user: number) {
   return JSON.parse(ret.json) as {
     chat: Chat.SupergroupGetChat;
     nonce: string | null;
-    language: string | null;
     form: FormType | null;
     answer: Record<string, string | boolean> | null;
   };

@@ -11,7 +11,7 @@ export default function ChallengePage() {
   return (
     <LoadingPage
       load={() => {
-        const { data: configData } = api.challenge.config.useSWR(void 0, {
+        const { data: config } = api.challenge.config.useSWR(void 0, {
           suspense: true,
           shouldRetryOnError: false,
         });
@@ -19,9 +19,6 @@ export default function ChallengePage() {
           suspense: true,
           shouldRetryOnError: false,
         });
-        const language =
-          data!.language ?? Telegram.WebApp.initDataUnsafe.user!.language_code;
-        const config = selectLanguage(configData, language);
         return (
           <WelcomePage
             chat={data!.chat}
