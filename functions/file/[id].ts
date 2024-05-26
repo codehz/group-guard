@@ -13,11 +13,15 @@ export const onRequest: PagesFunction<WorkerEnv, "id"> = async ({
   syncenv(env, waitUntil);
   const fileid = params.id as string;
   try {
-    return await cache.wrap(request, waitUntil, async () => {
-      const info = await bot.api.getFile(fileid);
-      const url = `https://api.telegram.org/file/bot${Bun.env.BOT_TOKEN}/${info.file_path}`;
-      return await fetch(url);
-    });
+    return await cache.wrap(
+      request,
+      async () => {
+        const info = await bot.api.getFile(fileid);
+        const url = `https://api.telegram.org/file/bot${Bun.env.BOT_TOKEN}/${info.file_path}`;
+        return await fetch(url);
+      },
+      { waitUntil }
+    );
   } catch {
     return new Response(null, { status: 404 });
   }

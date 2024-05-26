@@ -21,8 +21,7 @@ export const ChatProfileIcon = memoMotion(function ChatProfileIcon(
   const linearGradient = useId();
   return (
     <svg
-      width={size}
-      height={size}
+      style={{ width: size / 16 + "rem", height: size / 16 + "rem" }}
       viewBox="0 0 1 1"
       ref={ref}
       className={className}
@@ -32,6 +31,7 @@ export const ChatProfileIcon = memoMotion(function ChatProfileIcon(
           <linearGradient id={linearGradient} gradientTransform="rotate(90)">
             {colors.map((color, i) => (
               <stop
+                key={i}
                 offset={`${(i / colors.length) * 100}%`}
                 stopColor={"#" + color}
               />

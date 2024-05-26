@@ -5,32 +5,38 @@ import {
 } from "@shared/types";
 import type { Chat, PhotoSize, User } from "grammy/types";
 import { WorkersCacheStorage } from "workers-cache-storage";
-import { globalEnv } from "./env";
+import { globalEnv, waitUntil } from "./env";
 import { jsonAggQb, jsonQb, qb } from "./qb" with { type: "macro" };
 
 const cache = WorkersCacheStorage.json("db");
 cache.defaultTtl = 60 * 5;
 
-export async function queryChatConfig(chat: number) {
-  const ret = await globalEnv.DB.prepare(
-    qb(
-      {
-        config: {
-          from: { table: "chat_config" },
-          where: "config.chat = ?1",
+export const queryChatConfig = cache.define(
+  (chat: number) => `chat_config:${chat}`,
+  async (chat) => {
+    const ret = await globalEnv.DB.prepare(
+      qb(
+        {
+          config: {
+            from: { table: "chat_config" },
+            where: "config.chat = ?1",
+          },
         },
-      },
-      { value: "config.value" }
+        { value: "config.value" }
+      )
     )
-  )
-    .bind(chat)
-    .first<{ value: string }>();
-  const temp = ret?.value ? (JSON.parse(ret.value) as Partial<ChatConfig>) : {};
-  return {
-    ...DefaultChatConfig,
-    ...temp,
-  } as ChatConfig;
-}
+      .bind(chat)
+      .first<{ value: string }>();
+    const temp = ret?.value
+      ? (JSON.parse(ret.value) as Partial<ChatConfig>)
+      : {};
+    return {
+      ...DefaultChatConfig,
+      ...temp,
+    } as ChatConfig;
+  },
+  { waitUntil }
+);
 
 export async function queryChatInfo(chat: number, user: number) {
   const ret = await globalEnv.DB.prepare(
@@ -65,7 +71,7 @@ export async function queryChatInfo(chat: number, user: number) {
 }
 
 export async function listChat(user: number) {
-  const result = await globalEnv.DB.prepare(
+  const { results } = await globalEnv.DB.prepare(
     qb(
       {
         chat_admin: { from: { table: "chat_admin" }, where: "user = ?1" },
@@ -102,7 +108,7 @@ export async function listChat(user: number) {
   )
     .bind(user)
     .all<{ chat: number; info: string; sessions: string }>();
-  return result.results.map((r) => ({
+  return results.map((r) => ({
     chat: {
       ...(r.info ? JSON.parse(r.info) : {}),
       id: r.chat,
@@ -117,6 +123,39 @@ export async function listChat(user: number) {
       updated_at: string;
     }[],
   }));
+}
+
+export async function listChatAdmin(chat: number) {
+  const { results } = await globalEnv.DB.prepare(
+    qb(
+      {
+        chat_admin: {
+          from: { table: "chat_admin" },
+          where: "chat_admin.chat = ?1",
+        },
+        user_private_chat: {
+          join: {
+            table: "user_private_chat",
+            on: ["chat_admin.user = user_private_chat.user"],
+            type: "left",
+          },
+          where: "user_private_chat.private_chat IS NOT NULL",
+        },
+      },
+      {
+        user: "chat_admin.user",
+        private_chat: "user_private_chat.private_chat",
+        receive_notification: "chat_admin.receive_notification",
+      }
+    )
+  )
+    .bind(chat)
+    .all<{
+      user: number;
+      private_chat: number;
+      receive_notification: number;
+    }>();
+  return results;
 }
 
 export async function listSession(user: number, chat: number) {

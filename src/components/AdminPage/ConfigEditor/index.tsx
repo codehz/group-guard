@@ -1,25 +1,23 @@
 import { api } from "@/api";
 import { memoForward } from "@/component";
+import { NotificationModeEditor } from "@/components/AdminPage/ConfigEditor/NotificationModeEditor";
+import { WelcomePageEditor } from "@/components/AdminPage/ConfigEditor/WelcomePageEditor";
 import { Fieldset } from "@/components/Fieldset";
 import { Form } from "@/components/Form";
 import { useLoading } from "@/components/LoadingContext";
+import { LoadingPage } from "@/components/LoadingPage";
 import { NumberField } from "@/components/NumberField";
 import { useStackNavigator } from "@/components/StackNavigator";
-import { TextField } from "@/components/TextField";
+import { ToggleField } from "@/components/ToggleField";
+import { WindowFrame } from "@/components/WindowFrame";
 import { useEventHandler } from "@/hooks/useEventHandler";
-import { useSubTrees, useTreeRoot, type Tree } from "@/tree-state";
-import {
-  DefaultChatConfig,
-  type ChatConfig,
-  type WelcomePageConfig,
-} from "@shared/types";
+import { showError } from "@/show-error";
+import { useSubTrees, useTreeRoot } from "@/tree-state";
+import { DefaultChatConfig, type ChatConfig } from "@shared/types";
 import { style } from "css-in-bun" with { type: "macro" };
 import type { Chat } from "grammy/types";
-import { memo, type ElementRef, type ForwardedRef } from "react";
+import { type ElementRef, type ForwardedRef } from "react";
 import type { KeyedMutator } from "swr";
-import { showError } from "../../show-error";
-import { LoadingPage } from "../LoadingPage";
-import { WindowFrame } from "../WindowFrame";
 
 export function ConfigEditorLoader({ chat }: { chat: Chat.SupergroupGetChat }) {
   return (
@@ -45,7 +43,7 @@ export function ConfigEditorLoader({ chat }: { chat: Chat.SupergroupGetChat }) {
   );
 }
 
-export const ConfigEditor = memoForward(function ConfigEditor(
+const ConfigEditor = memoForward(function ConfigEditor(
   {
     chat,
     config,
@@ -91,41 +89,27 @@ export const ConfigEditor = memoForward(function ConfigEditor(
         ref={ref}
         className={style({ display: "grid", gap: 8 })}
       >
+        <Fieldset legend="验证设置">
+          <ToggleField label="启用验证" tree={subt.enabled} />
+          <NumberField
+            label="验证时间限制（秒）"
+            tree={subt.challenge_timeout}
+            required
+            min={60}
+            max={60 * 60}
+            enterKeyAction="next"
+          />
+          <NumberField
+            label="默认ban时间（秒）"
+            tree={subt.ban_duration}
+            required
+            min={60}
+            max={60 * 60 * 24 * 30}
+          />
+        </Fieldset>
         <WelcomePageEditor tree={subt.welcome_page} />
-        <NumberField
-          label="验证时间限制（秒）"
-          tree={subt.challenge_timeout}
-          required
-          min={60}
-          max={60 * 60}
-          enterKeyAction="next"
-        />
-        <NumberField
-          label="默认ban时间（秒）"
-          tree={subt.ban_duration}
-          required
-          min={60}
-          max={60 * 60 * 24 * 30}
-        />
+        <NotificationModeEditor chat={chat.id} tree={root} />
       </Form>
     </WindowFrame>
-  );
-});
-
-const WelcomePageEditor = memo(function WelcomePageEditor({
-  tree,
-}: {
-  tree: Tree<WelcomePageConfig>;
-}) {
-  const subt = useSubTrees(tree);
-  return (
-    <Fieldset legend="编辑欢迎界面">
-      <TextField label="标题" tree={subt.title} />
-      <TextField
-        label="内容"
-        tree={subt.content}
-        description="支持Markdown，可以使用占位符{chat_title}"
-      />
-    </Fieldset>
   );
 });

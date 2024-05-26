@@ -24,6 +24,7 @@ export function syncenv(
 }
 
 type DbAction =
+  | { type: "chat_admin_toggle_notification"; value: boolean; user?: number }
   | { type: "chat_config_update"; value: Record<string, unknown> }
   | { type: "chat_config_reset" }
   | { type: "form_enable"; id: string }

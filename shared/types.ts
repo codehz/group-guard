@@ -73,13 +73,21 @@ export const FormType = z.object({
 });
 export type FormType = z.infer<typeof FormType>;
 
-export type QueueData = {
-  type: "welcome";
-  chat_id: number;
-  nonce: string;
-  welcome_message: number;
-  target_user: number;
-};
+export type QueueData =
+  | {
+      type: "welcome";
+      chat_id: number;
+      nonce: string;
+      welcome_message: number;
+      target_user: number;
+    }
+  | {
+      type: "direct_notification_expired";
+      chat_id: number;
+      nonce: string;
+      message_id: number;
+      target_user: number;
+    };
 
 export const WelcomePageConfig = z.object({
   title: z.string().min(1, "标题不能为空"),
@@ -88,16 +96,24 @@ export const WelcomePageConfig = z.object({
 export type WelcomePageConfig = z.infer<typeof WelcomePageConfig>;
 
 export const ChatConfig = z.object({
+  enabled: z.boolean(),
   welcome_page: WelcomePageConfig,
   challenge_timeout: z.number(),
   ban_duration: z.number(),
+  notification_mode: z.enum(["private", "external", "direct"]),
+  notification_external_chat_id: z.number(),
+  notification_direct_timeout: z.number(),
 });
 export type ChatConfig = z.infer<typeof ChatConfig>;
 export const DefaultChatConfig: ChatConfig = {
+  enabled: true,
   welcome_page: {
     title: "欢迎",
     content: "欢迎来到 {chat_title}。请点击下面的按钮通过验证",
   },
   challenge_timeout: 60 * 5,
   ban_duration: 60 * 5,
+  notification_mode: "private",
+  notification_external_chat_id: 0,
+  notification_direct_timeout: 60 * 5,
 };

@@ -16,7 +16,7 @@ export function html(str: TemplateStringsArray, ...args: StringOrUnsafeHTML[]) {
         ? escape(arg)
         : typeof arg === "number"
           ? arg.toString()
-          : arg.html;
+          : arg?.html;
     result += escaped + str[i + 1].trim();
   }
   return result;

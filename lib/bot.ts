@@ -11,8 +11,14 @@ export const bot = new Bot(Bun.env.BOT_TOKEN, {
   botInfo: JSON.parse(Bun.env.BOT_INFO),
 });
 
-const cached = WorkersCacheStorage.void("bot-request-dedup");
-cached.defaultTtl = 60 * 60 * 24;
+const actionCache = WorkersCacheStorage.void("bot-request-dedup");
+actionCache.defaultTtl = 60 * 60 * 24;
+const jsonCache = WorkersCacheStorage.json("bot-query-dedup");
+jsonCache.defaultTtl = 60 * 60 * 24;
+
+export async function getChatInfo(chatId: number) {
+  return await jsonCache.wrap(`chat:${chatId}`, () => bot.api.getChat(chatId));
+}
 
 export function unrestrictChatMember(chatId: number, userId: number) {
   return bot.api.restrictChatMember(chatId, userId, {
@@ -43,11 +49,12 @@ export async function deleteMessageSafe(chatId: number, messageId: number) {
 }
 
 async function sendWelcomeMessage(chatId: number, user: User) {
+  const config = await queryChatConfig(chatId);
+  if (!config.enabled) return;
   await bot.api.restrictChatMember(chatId, user.id, {
     can_send_messages: false,
   });
   const nonce = nanoid();
-  const config = await queryChatConfig(chatId);
   const {
     photos: [photos = []],
   } = await bot.api.getUserProfilePhotos(user.id, { limit: 1 });
@@ -86,7 +93,7 @@ async function sendWelcomeMessage(chatId: number, user: User) {
 }
 
 async function updateFullChat(id: number) {
-  const fullchat = await bot.api.getChat(id);
+  const fullchat = await getChatInfo(id);
   return globalEnv.DB.prepare(
     "INSERT INTO chat_info(chat, info) VALUES (?, ?) ON CONFLICT DO UPDATE SET info = excluded.info, updated_at = CURRENT_TIMESTAMP"
   ).bind(id, JSON.stringify(fullchat));
@@ -194,21 +201,21 @@ bot.command("start", async (ctx) => {
   const user = ctx.from;
   if (!user) return;
   if (ctx.chat.type !== "private") return;
-  await cached.wrap(
+  await actionCache.wrap(
     `user_private_chat:${user.id}:${ctx.chat.id}`,
-    waitUntil,
     async () => {
       await globalEnv.DB.prepare(
         "INSERT INTO user_private_chat (user, private_chat) VALUES (?1, ?2) ON CONFLICT DO NOTHING"
       )
         .bind(user.id, ctx.chat.id)
         .run();
-    }
+    },
+    { waitUntil }
   );
   if (ctx.match) {
     const chatId = parseInt(ctx.match);
     if (Number.isFinite(chatId)) {
-      const userDetail = (await ctx.api.getChat(
+      const userDetail = (await getChatInfo(
         ctx.chat.id
       )) as Chat.PrivateGetChat;
       const [session, admin] = await globalEnv.DB.batch([
@@ -240,6 +247,8 @@ bot.command("start", async (ctx) => {
       }
       return;
     }
+  } else {
+    ctx.reply("欢迎使用 " + bot.botInfo.first_name + " 服务");
   }
 });
 bot.command("menu", async (ctx) => {

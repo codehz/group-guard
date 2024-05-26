@@ -17,6 +17,7 @@ const stmts = [
     chat chat_id not null,
     user user_id not null,
     created_at timestamp not null default current_timestamp,
+    receive_notification boolean not null default true,
     primary key (chat, user)) without rowid;`,
   `create table if not exists chat_info (
     chat chat_id not null,
@@ -79,6 +80,10 @@ const stmts = [
   `create trigger if not exists trigger_audit_check_admin before insert on audit
     when (not exists (select 1 from chat_admin where chat = new.chat and user = new.user)) begin
     select raise(fail, 'permission denied'); end;`,
+  `create trigger if not exists trigger_audit_chat_admin_toggle_notification before insert on audit
+    when (new.action ->> 'type' = 'chat_admin_toggle_notification') begin
+    update chat_admin set receive_notification = new.action -> 'value' = 'true'
+      where chat = new.chat and user = coalesce(cast(new.action -> 'user' as integer), new.user); end;`,
   `create trigger if not exists trigger_audit_chat_config_update before insert on audit
     when (new.action ->> 'type' = 'chat_config_update') begin
     insert into chat_config (chat, value) values (new.chat, new.action -> 'value')
