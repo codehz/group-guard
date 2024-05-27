@@ -289,7 +289,7 @@ export class SubTree<P, const S extends ResolvePath>
 }
 
 export function useTreeRoot<T>(input: T): TreeRoot<T> {
-  return useInstance(() => new TreeRoot(structuredClone(input)));
+  return useInstance(() => new TreeRoot(JSON.parse(JSON.stringify(input))));
 }
 
 export function useSingleTree<T>(input: T): SingleTree<T> {
