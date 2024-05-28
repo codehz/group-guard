@@ -40,6 +40,16 @@ export default {
           break;
         }
         case "direct_notification_expired": {
+          const res = await env.DB.prepare(
+            'SELECT EXISTS (SELECT FROM session WHERE chat = ? AND user = ? AND nonce = ?) AS "exists"'
+          )
+            .bind(data.chat_id, data.target_user, data.nonce)
+            .first<{ exists: number }>();
+          if (!res?.exists) {
+            message.ack();
+            await deleteMessageSafe(data.chat_id, data.message_id);
+            return;
+          }
           const { results } = await env.DB.prepare(
             qb(
               {
