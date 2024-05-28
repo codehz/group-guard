@@ -136,14 +136,6 @@ callbackHandler.callbackQuery(/^kick:.*/, async (ctx) => {
   )
     .bind(nonce, ctx.from.id)
     .first<{ chat: number; user: number; config?: string }>();
-  if (ctx.callbackQuery.message) {
-    waitUntil(
-      deleteMessageSafe(
-        ctx.callbackQuery.message.chat.id,
-        ctx.callbackQuery.message.message_id
-      )
-    );
-  }
   if (res) {
     const { ban_duration } = {
       ...DefaultChatConfig,
@@ -152,6 +144,14 @@ callbackHandler.callbackQuery(/^kick:.*/, async (ctx) => {
     await ctx.api.banChatMember(res.chat, res.user, {
       until_date: (Date.now() / 1000 + ban_duration) | 0,
     });
+    if (ctx.callbackQuery.message) {
+      waitUntil(
+        deleteMessageSafe(
+          ctx.callbackQuery.message.chat.id,
+          ctx.callbackQuery.message.message_id
+        )
+      );
+    }
   }
 });
 callbackHandler.callbackQuery(/^accept:.*/, async (ctx) => {
