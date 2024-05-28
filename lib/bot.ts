@@ -140,13 +140,20 @@ callbackHandler.callbackQuery(/^accept:.*/, async (ctx) => {
     await unrestrictChatMember(res.chat, res.user);
     if (ctx.callbackQuery.message) {
       const message = ctx.callbackQuery.message;
-      waitUntil(
-        ctx.api.editMessageReplyMarkup(message.chat.id, message.message_id, {
-          reply_markup: new InlineKeyboard().add(
-            InlineKeyboard.url("查看用户", `tg://user?id=${res.user + ""}`)
-          ),
-        })
-      );
+      if (message.chat.type === "private")
+        waitUntil(
+          ctx.api.editMessageReplyMarkup(message.chat.id, message.message_id, {
+            reply_markup: new InlineKeyboard().add(
+              InlineKeyboard.url("查看用户", `tg://user?id=${res.user + ""}`)
+            ),
+          })
+        );
+      else
+        waitUntil(
+          ctx.api.editMessageReplyMarkup(message.chat.id, message.message_id, {
+            reply_markup: { inline_keyboard: [] },
+          })
+        );
     }
   } else {
     await ctx.answerCallbackQuery("目标会话不存在或已被其他管理员处理");
@@ -177,13 +184,20 @@ callbackHandler.callbackQuery(/^reject:.*/, async (ctx) => {
     });
     if (ctx.callbackQuery.message) {
       const message = ctx.callbackQuery.message;
-      waitUntil(
-        ctx.api.editMessageReplyMarkup(message.chat.id, message.message_id, {
-          reply_markup: new InlineKeyboard().add(
-            InlineKeyboard.url("查看用户", `tg://user?id=${res.user + ""}`)
-          ),
-        })
-      );
+      if (message.chat.type === "private")
+        waitUntil(
+          ctx.api.editMessageReplyMarkup(message.chat.id, message.message_id, {
+            reply_markup: new InlineKeyboard().add(
+              InlineKeyboard.url("查看用户", `tg://user?id=${res.user + ""}`)
+            ),
+          })
+        );
+      else
+        waitUntil(
+          ctx.api.editMessageReplyMarkup(message.chat.id, message.message_id, {
+            reply_markup: { inline_keyboard: [] },
+          })
+        );
     }
   } else {
     await ctx.answerCallbackQuery("目标会话不存在或已被其他管理员处理");
