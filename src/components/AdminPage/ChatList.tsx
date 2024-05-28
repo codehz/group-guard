@@ -39,7 +39,12 @@ export function ChatList({}: {}) {
       </div>
       <div data-swipe className={styles.ChatList}>
         {data.map(({ chat, sessions }) => (
-          <ChatCard key={chat.id} chat={chat} sessions={sessions} />
+          <ChatCard
+            key={chat.id}
+            chat={chat}
+            sessions={sessions}
+            refresh={mutate}
+          />
         ))}
       </div>
     </div>
@@ -49,6 +54,7 @@ export function ChatList({}: {}) {
 const ChatCard = memo(function ChatCard({
   chat,
   sessions,
+  refresh,
 }: {
   chat: Chat.SupergroupGetChat;
   sessions: {
@@ -60,6 +66,7 @@ const ChatCard = memo(function ChatCard({
     created_at: string;
     updated_at: string;
   }[];
+  refresh: () => void;
 }) {
   const navigator = useStackNavigator();
   const handleClick = useEventHandler(() => {
@@ -82,7 +89,12 @@ const ChatCard = memo(function ChatCard({
         <IconButton.Config onClick={handleClick} className={styles.CardArrow} />
       </div>
       {sessions.map((session) => (
-        <SessionCard key={session.user.id} chat={chat} {...session} />
+        <SessionCard
+          key={session.user.id}
+          chat={chat}
+          refresh={refresh}
+          {...session}
+        />
       ))}
     </div>
   );
@@ -97,6 +109,7 @@ const SessionCard = memo(function SessionCard({
   form,
   created_at,
   updated_at,
+  refresh,
 }: {
   chat: Chat.SupergroupGetChat;
   nonce: string;
@@ -106,6 +119,7 @@ const SessionCard = memo(function SessionCard({
   form: FormType;
   created_at: string;
   updated_at: string;
+  refresh: () => void;
 }) {
   const avatar = user.photos[user.photos.length - 1]?.file_id;
   const accept = api.admin.chat.accept.useSWRMutation();
@@ -113,10 +127,12 @@ const SessionCard = memo(function SessionCard({
   const handleAccept = useEventHandler(async (e: React.MouseEvent) => {
     e.stopPropagation();
     await accept.trigger({ chat_id: chat.id, nonce }).catch(errorReport);
+    refresh();
   });
   const handleReject = useEventHandler(async (e: React.MouseEvent) => {
     e.stopPropagation();
     await reject.trigger({ chat_id: chat.id, nonce }).catch(errorReport);
+    refresh();
   });
   const navigator = useStackNavigator();
   const handleClick = useEventHandler(() => {
