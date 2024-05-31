@@ -69,7 +69,10 @@ async function sendWelcomeMessage(chatId: number, user: User) {
             `https://t.me/${bot.botInfo.username}?start=${chatId}`
           )
         )
-        .row(InlineKeyboard.text("直接踢出", "kick:" + nonce)),
+        .row(
+          InlineKeyboard.text("直接通过", "pass:" + nonce),
+          InlineKeyboard.text("直接踢出", "kick:" + nonce)
+        ),
       protect_content: true,
       disable_notification: true,
       parse_mode: "HTML",
@@ -129,6 +132,25 @@ const callbackHandler = bot.use(async (ctx, next) => {
   }
 });
 
+callbackHandler.callbackQuery(/^pass:.*/, async (ctx) => {
+  const nonce = ctx.callbackQuery.data.slice("pass:".length);
+  const res = await globalEnv.DB.prepare(
+    "DELETE FROM session WHERE nonce = ? AND EXISTS (SELECT 1 FROM chat_admin WHERE chat = session.chat AND user = ?2) RETURNING chat, user"
+  )
+    .bind(nonce, ctx.from.id)
+    .first<{ chat: number; user: number }>();
+  if (res) {
+    await unrestrictChatMember(res.chat, res.user);
+    if (ctx.callbackQuery.message) {
+      waitUntil(
+        deleteMessageSafe(
+          ctx.callbackQuery.message.chat.id,
+          ctx.callbackQuery.message.message_id
+        )
+      );
+    }
+  }
+});
 callbackHandler.callbackQuery(/^kick:.*/, async (ctx) => {
   const nonce = ctx.callbackQuery.data.slice("kick:".length);
   const res = await globalEnv.DB.prepare(
