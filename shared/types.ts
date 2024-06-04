@@ -103,6 +103,7 @@ export const ChatConfig = z.object({
   notification_mode: z.enum(["private", "external", "direct"]),
   notification_external_chat_id: z.number(),
   notification_direct_timeout: z.number(),
+  delete_new_chat_member_message: z.boolean().default(false),
 });
 export type ChatConfig = z.infer<typeof ChatConfig>;
 export const DefaultChatConfig: ChatConfig = {
@@ -116,4 +117,5 @@ export const DefaultChatConfig: ChatConfig = {
   notification_mode: "private",
   notification_external_chat_id: 0,
   notification_direct_timeout: 60 * 5,
+  delete_new_chat_member_message: false,
 };

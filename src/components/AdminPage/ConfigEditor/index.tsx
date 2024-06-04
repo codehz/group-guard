@@ -91,6 +91,10 @@ const ConfigEditor = memoForward(function ConfigEditor(
       >
         <Fieldset legend="验证设置">
           <ToggleField label="启用验证" tree={subt.enabled} />
+          <ToggleField
+            label="删除进群消息"
+            tree={subt.delete_new_chat_member_message}
+          />
           <NumberField
             label="验证时间限制（秒）"
             tree={subt.challenge_timeout}
