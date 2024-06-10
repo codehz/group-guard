@@ -422,7 +422,7 @@ bot.on("chat_member", async (ctx) => {
   }
 });
 bot.on(":new_chat_members", async (ctx) => {
-  if (ctx.chat.type !== "private") return;
+  if (ctx.chat.type !== "supergroup") return;
   const config = await queryChatConfig(ctx.chat.id);
   if (!config.enabled || !config.delete_new_chat_member_message) return;
   await deleteMessageSafe(ctx.chat.id, ctx.msgId);
