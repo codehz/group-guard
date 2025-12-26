@@ -10,3 +10,18 @@ database_id = "db805d1a-62ee-45d4-975f-4fca9817ab77"
 
 [[queues.consumers]]
 queue = "group-guard-queue"
+
+[observability]
+enabled = false
+head_sampling_rate = 1
+
+[observability.logs]
+enabled = true
+head_sampling_rate = 1
+persist = true
+invocation_logs = true
+
+[observability.traces]
+enabled = false
+persist = true
+head_sampling_rate = 1
