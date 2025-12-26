@@ -27,7 +27,8 @@ async function sendAnswerMessage(chat: number, message: string, nonce: string) {
   }
   const reply_markup = new InlineKeyboard().add(
     InlineKeyboard.text("通过", "accept:" + nonce),
-    InlineKeyboard.text("拒绝", "reject:" + nonce)
+    InlineKeyboard.text("拒绝", "reject:" + nonce),
+    InlineKeyboard.text("封禁", "ban:" + nonce)
   );
   const result = await bot.api.sendMessage(chat, message, {
     reply_markup,
@@ -252,6 +253,23 @@ export const router = t.router({
           await bot.api.banChatMember(input.chat_id, result.user, {
             until_date: (Date.now() / 1000 + ban_duration) | 0,
           });
+          return;
+        }),
+      ban: chatProcedure
+        .input(z.object({ nonce: z.string() }))
+        .mutation(async ({ ctx, input }) => {
+          const result = await globalEnv.DB.prepare(
+            "DELETE FROM session WHERE chat = ?1 AND nonce = ?2 AND EXISTS (SELECT 1 FROM chat_admin WHERE chat = ?1 AND user = ?3) RETURNING user, welcome_message"
+          )
+            .bind(input.chat_id, input.nonce, ctx.user.id)
+            .first<{
+              user: number;
+              welcome_message?: number;
+            }>();
+          if (!result) throw new Error("no such session");
+          if (result.welcome_message)
+            waitUntil(deleteMessageSafe(input.chat_id, result.welcome_message));
+          await bot.api.banChatMember(input.chat_id, result.user);
           return;
         }),
       /** 读取配置信息 */

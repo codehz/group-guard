@@ -71,7 +71,8 @@ async function sendWelcomeMessage(chatId: number, user: User) {
         )
         .row(
           InlineKeyboard.text("直接通过", "pass:" + nonce),
-          InlineKeyboard.text("直接踢出", "kick:" + nonce)
+          InlineKeyboard.text("直接踢出", "kick:" + nonce),
+          InlineKeyboard.text("永久封禁", "ban:" + nonce)
         ),
       protect_content: true,
       disable_notification: true,
@@ -254,6 +255,48 @@ callbackHandler.callbackQuery(/^reject:.*/, async (ctx) => {
     await ctx.api.banChatMember(res.chat, res.user, {
       until_date: (Date.now() / 1000 + ban_duration) | 0,
     });
+    if (ctx.callbackQuery.message) {
+      const message = ctx.callbackQuery.message;
+      if (message.chat.type === "private")
+        waitUntil(
+          ctx.api.editMessageReplyMarkup(message.chat.id, message.message_id, {
+            reply_markup: new InlineKeyboard().add(
+              InlineKeyboard.url("查看用户", `tg://user?id=${res.user + ""}`)
+            ),
+          })
+        );
+      else
+        waitUntil(
+          ctx.api.editMessageReplyMarkup(message.chat.id, message.message_id, {
+            reply_markup: { inline_keyboard: [] },
+          })
+        );
+    }
+  } else {
+    await ctx.answerCallbackQuery("目标会话不存在或已被其他管理员处理");
+    if (ctx.callbackQuery.message) {
+      const message = ctx.callbackQuery.message;
+      waitUntil(
+        ctx.api.editMessageReplyMarkup(message.chat.id, message.message_id, {
+          reply_markup: new InlineKeyboard(),
+        })
+      );
+    }
+  }
+});
+callbackHandler.callbackQuery(/^ban:.*/, async (ctx) => {
+  const nonce = ctx.callbackQuery.data.slice("ban:".length);
+  if (!(await isAdminForSession(nonce, ctx.from.id))) {
+    await ctx.answerCallbackQuery({ show_alert: true, text: "权限不足" });
+    return;
+  }
+  const res = await globalEnv.DB.prepare(
+    "DELETE FROM session WHERE nonce = ? AND EXISTS (SELECT 1 FROM chat_admin WHERE chat = session.chat AND user = ?2) RETURNING chat, user"
+  )
+    .bind(nonce, ctx.from.id)
+    .first<{ chat: number; user: number }>();
+  if (res) {
+    await ctx.api.banChatMember(res.chat, res.user);
     if (ctx.callbackQuery.message) {
       const message = ctx.callbackQuery.message;
       if (message.chat.type === "private")

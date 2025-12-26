@@ -77,7 +77,8 @@ export default {
           try {
             const reply_markup = new InlineKeyboard().add(
               InlineKeyboard.text("通过", "accept:" + data.nonce),
-              InlineKeyboard.text("拒绝", "reject:" + data.nonce)
+              InlineKeyboard.text("拒绝", "reject:" + data.nonce),
+              InlineKeyboard.text("封禁", "ban:" + data.nonce)
             );
             for (const { private_chat } of results) {
               await bot.api.copyMessage(

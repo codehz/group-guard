@@ -124,6 +124,7 @@ const SessionCard = memo(function SessionCard({
   const avatar = user.photos[user.photos.length - 1]?.file_id;
   const accept = api.admin.chat.accept.useSWRMutation();
   const reject = api.admin.chat.reject.useSWRMutation();
+  const ban = api.admin.chat.ban.useSWRMutation();
   const handleAccept = useEventHandler(async (e: React.MouseEvent) => {
     e.stopPropagation();
     await accept.trigger({ chat_id: chat.id, nonce }).catch(errorReport);
@@ -132,6 +133,11 @@ const SessionCard = memo(function SessionCard({
   const handleReject = useEventHandler(async (e: React.MouseEvent) => {
     e.stopPropagation();
     await reject.trigger({ chat_id: chat.id, nonce }).catch(errorReport);
+    refresh();
+  });
+  const handleBan = useEventHandler(async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    await ban.trigger({ chat_id: chat.id, nonce }).catch(errorReport);
     refresh();
   });
   const navigator = useStackNavigator();
@@ -176,6 +182,9 @@ const SessionCard = memo(function SessionCard({
       </button>
       <button className={styles.SessionCardReject} onClick={handleReject}>
         拒绝
+      </button>
+      <button className={styles.SessionCardBan} onClick={handleBan}>
+        封禁
       </button>
     </div>
   );
@@ -227,7 +236,7 @@ const styles = create({
   SessionCard: {
     display: "grid",
     gridTemplate:
-      "'avatar name accept reject' 1fr 'avatar status accept reject' 1fr / 32px minmax(0, 1fr) auto auto",
+      "'avatar name accept reject ban' 1fr 'avatar status accept reject ban' 1fr / 32px minmax(0, 1fr) auto auto auto",
     gap: "4px 8px",
     padding: "4px 8px",
     alignItems: "center",
@@ -273,6 +282,11 @@ const styles = create({
   },
   SessionCardReject: {
     gridArea: "reject",
+    backgroundColor: "var(--tg-theme-destructive-text-color)",
+    fontSize: 14,
+  },
+  SessionCardBan: {
+    gridArea: "ban",
     backgroundColor: "var(--tg-theme-destructive-text-color)",
     fontSize: 14,
   },

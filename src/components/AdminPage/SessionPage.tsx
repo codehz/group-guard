@@ -37,8 +37,11 @@ export function SessionPage({
   const fullname = `${user.first_name}${user.last_name ? " " + user.last_name : ""}`;
   const accept = api.admin.chat.accept.useSWRMutation();
   const reject = api.admin.chat.reject.useSWRMutation();
+  const ban = api.admin.chat.ban.useSWRMutation();
   const navigator = useStackNavigator();
-  useMainButtonLoadingIndicator(accept.isMutating || reject.isMutating);
+  useMainButtonLoadingIndicator(
+    accept.isMutating || reject.isMutating || ban.isMutating
+  );
   useMainButtonClicked(() => {
     Telegram.WebApp.showPopup(
       {
@@ -54,6 +57,11 @@ export function SessionPage({
             id: "reject",
             text: "拒绝",
           },
+          {
+            type: "destructive",
+            id: "ban",
+            text: "封禁",
+          },
         ],
       },
       async (id) => {
@@ -64,6 +72,9 @@ export function SessionPage({
               break;
             case "reject":
               await reject.trigger({ chat_id: chat.id, nonce });
+              break;
+            case "ban":
+              await ban.trigger({ chat_id: chat.id, nonce });
               break;
             default:
               return;
