@@ -117,6 +117,15 @@ async function reloadChatAdminList(id: number) {
   return validAdmins;
 }
 
+async function isAdminForSession(nonce: string, userId: number) {
+  const row = await globalEnv.DB.prepare(
+    "SELECT 1 AS ok FROM session WHERE nonce = ? AND EXISTS (SELECT 1 FROM chat_admin WHERE chat = session.chat AND user = ?2) LIMIT 1"
+  )
+    .bind(nonce, userId)
+    .first<{ ok?: number }>();
+  return !!row?.ok;
+}
+
 const callbackHandler = bot.use(async (ctx, next) => {
   try {
     await next();
@@ -134,6 +143,10 @@ const callbackHandler = bot.use(async (ctx, next) => {
 
 callbackHandler.callbackQuery(/^pass:.*/, async (ctx) => {
   const nonce = ctx.callbackQuery.data.slice("pass:".length);
+  if (!(await isAdminForSession(nonce, ctx.from.id))) {
+    await ctx.answerCallbackQuery({ show_alert: true, text: "权限不足" });
+    return;
+  }
   const res = await globalEnv.DB.prepare(
     "DELETE FROM session WHERE nonce = ? AND EXISTS (SELECT 1 FROM chat_admin WHERE chat = session.chat AND user = ?2) RETURNING chat, user"
   )
@@ -153,6 +166,10 @@ callbackHandler.callbackQuery(/^pass:.*/, async (ctx) => {
 });
 callbackHandler.callbackQuery(/^kick:.*/, async (ctx) => {
   const nonce = ctx.callbackQuery.data.slice("kick:".length);
+  if (!(await isAdminForSession(nonce, ctx.from.id))) {
+    await ctx.answerCallbackQuery({ show_alert: true, text: "权限不足" });
+    return;
+  }
   const res = await globalEnv.DB.prepare(
     "DELETE FROM session WHERE nonce = ? AND EXISTS (SELECT 1 FROM chat_admin WHERE chat = session.chat AND user = ?2) RETURNING chat, user, (SELECT value FROM chat_config WHERE chat_config.chat = session.chat) AS config"
   )
@@ -178,6 +195,10 @@ callbackHandler.callbackQuery(/^kick:.*/, async (ctx) => {
 });
 callbackHandler.callbackQuery(/^accept:.*/, async (ctx) => {
   const nonce = ctx.callbackQuery.data.slice("accept:".length);
+  if (!(await isAdminForSession(nonce, ctx.from.id))) {
+    await ctx.answerCallbackQuery({ show_alert: true, text: "权限不足" });
+    return;
+  }
   const res = await globalEnv.DB.prepare(
     "DELETE FROM session WHERE nonce = ?1 AND EXISTS (SELECT 1 FROM chat_admin WHERE chat = session.chat AND user = ?2) RETURNING chat, user"
   )
@@ -216,6 +237,10 @@ callbackHandler.callbackQuery(/^accept:.*/, async (ctx) => {
 });
 callbackHandler.callbackQuery(/^reject:.*/, async (ctx) => {
   const nonce = ctx.callbackQuery.data.slice("reject:".length);
+  if (!(await isAdminForSession(nonce, ctx.from.id))) {
+    await ctx.answerCallbackQuery({ show_alert: true, text: "权限不足" });
+    return;
+  }
   const res = await globalEnv.DB.prepare(
     "DELETE FROM session WHERE nonce = ? AND EXISTS (SELECT 1 FROM chat_admin WHERE chat = session.chat AND user = ?2) RETURNING chat, user, (SELECT value FROM chat_config WHERE chat_config.chat = session.chat) AS config"
   )
