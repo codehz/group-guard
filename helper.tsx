@@ -13,7 +13,7 @@ import { renderToString } from "react-dom/server";
 export async function ssg(
   Component: any,
   path: string,
-  { svg, css }: { svg: string; css: string }
+  { svg, css }: { svg: string; css: string },
 ) {
   const str = renderToString(
     <html lang="zh-CN">
@@ -33,7 +33,7 @@ export async function ssg(
         </div>
         <div id="svg" dangerouslySetInnerHTML={{ __html: svg }} />
       </body>
-    </html>
+    </html>,
   );
   return `<!DOCTYPE html>${str}`;
 }
@@ -82,7 +82,7 @@ export const hydratePlugin: BunPlugin = {
           "^" +
             escapeRegExp(join(import.meta.dir, "./pages")) +
             "/.*" +
-            "\\.ts[x]$"
+            "\\.ts[x]$",
         ),
       },
       async ({ path, loader }) => {
@@ -92,7 +92,7 @@ export const hydratePlugin: BunPlugin = {
         return {
           contents: [
             `import Component from ${JSON.stringify(
-              "./" + basename(path) + "?client"
+              "./" + basename(path) + "?client",
             )}`,
             `import { hydrateRoot } from "react-dom/client"`,
             `import { Container } from "@/components/Container"`,
@@ -100,23 +100,18 @@ export const hydratePlugin: BunPlugin = {
           ].join(";\n"),
           loader: "jsx" as const,
         };
-      }
+      },
     );
-    build.onResolve(
-      { filter: /\.ts[x]\?client$/ },
-      async ({ importer, path }) => {
-        const url = pathToFileURL(importer);
-        return {
-          path: fileURLToPath(new URL(path, url)),
-          namespace: "client",
-        };
-      }
-    );
-    build.onLoad(
-      { namespace: "client", filter: /\.ts[x]$/ },
-      async ({ path, loader }) => {
-        return { contents: await Bun.file(path).text(), loader };
-      }
-    );
+    build.onResolve({ filter: /\?client$/ }, ({ path, importer }) => {
+      return {
+        path: fileURLToPath(new URL(path, pathToFileURL(importer))) + "?client",
+      };
+    });
+    build.onLoad({ filter: /\?client$/ }, async ({ path }) => {
+      return {
+        contents: await Bun.file(path.slice(0, -"?client".length)).text(),
+        loader: "tsx",
+      };
+    });
   },
 };
