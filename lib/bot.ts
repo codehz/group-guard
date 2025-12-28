@@ -118,13 +118,33 @@ async function reloadChatAdminList(id: number) {
   return validAdmins;
 }
 
-async function isAdminForSession(nonce: string, userId: number) {
+async function checkSessionPermission(nonce: string, userId: number) {
   const row = await globalEnv.DB.prepare(
-    "SELECT 1 AS ok FROM session WHERE nonce = ? AND EXISTS (SELECT 1 FROM chat_admin WHERE chat = session.chat AND user = ?2) LIMIT 1"
+    "SELECT (SELECT 1 FROM session WHERE nonce = ?1) AS session_exists, (SELECT 1 FROM session WHERE nonce = ?1 AND EXISTS (SELECT 1 FROM chat_admin WHERE chat = session.chat AND user = ?2)) AS is_admin"
   )
     .bind(nonce, userId)
-    .first<{ ok?: number }>();
-  return !!row?.ok;
+    .first<{ session_exists?: number; is_admin?: number }>();
+  if (!row?.session_exists) return "not_found";
+  if (!row?.is_admin) return "no_permission";
+  return "ok";
+}
+
+async function handleProcessed(ctx: any) {
+  await ctx.answerCallbackQuery({
+    show_alert: true,
+    text: "该条目已被处理",
+  });
+  if (ctx.callbackQuery.message) {
+    const message = ctx.callbackQuery.message;
+    waitUntil(
+      ctx.api.editMessageReplyMarkup(message.chat.id, message.message_id, {
+        reply_markup: new InlineKeyboard().webApp(
+          "已由机器人处理",
+          Bun.env.BOT_HOST + "/admin"
+        ),
+      })
+    );
+  }
 }
 
 const callbackHandler = bot.use(async (ctx, next) => {
@@ -144,7 +164,9 @@ const callbackHandler = bot.use(async (ctx, next) => {
 
 callbackHandler.callbackQuery(/^pass:.*/, async (ctx) => {
   const nonce = ctx.callbackQuery.data.slice("pass:".length);
-  if (!(await isAdminForSession(nonce, ctx.from.id))) {
+  const permission = await checkSessionPermission(nonce, ctx.from.id);
+  if (permission === "not_found") return await handleProcessed(ctx);
+  if (permission === "no_permission") {
     await ctx.answerCallbackQuery({ show_alert: true, text: "权限不足" });
     return;
   }
@@ -167,7 +189,9 @@ callbackHandler.callbackQuery(/^pass:.*/, async (ctx) => {
 });
 callbackHandler.callbackQuery(/^kick:.*/, async (ctx) => {
   const nonce = ctx.callbackQuery.data.slice("kick:".length);
-  if (!(await isAdminForSession(nonce, ctx.from.id))) {
+  const permission = await checkSessionPermission(nonce, ctx.from.id);
+  if (permission === "not_found") return await handleProcessed(ctx);
+  if (permission === "no_permission") {
     await ctx.answerCallbackQuery({ show_alert: true, text: "权限不足" });
     return;
   }
@@ -196,7 +220,9 @@ callbackHandler.callbackQuery(/^kick:.*/, async (ctx) => {
 });
 callbackHandler.callbackQuery(/^accept:.*/, async (ctx) => {
   const nonce = ctx.callbackQuery.data.slice("accept:".length);
-  if (!(await isAdminForSession(nonce, ctx.from.id))) {
+  const permission = await checkSessionPermission(nonce, ctx.from.id);
+  if (permission === "not_found") return await handleProcessed(ctx);
+  if (permission === "no_permission") {
     await ctx.answerCallbackQuery({ show_alert: true, text: "权限不足" });
     return;
   }
@@ -238,7 +264,9 @@ callbackHandler.callbackQuery(/^accept:.*/, async (ctx) => {
 });
 callbackHandler.callbackQuery(/^reject:.*/, async (ctx) => {
   const nonce = ctx.callbackQuery.data.slice("reject:".length);
-  if (!(await isAdminForSession(nonce, ctx.from.id))) {
+  const permission = await checkSessionPermission(nonce, ctx.from.id);
+  if (permission === "not_found") return await handleProcessed(ctx);
+  if (permission === "no_permission") {
     await ctx.answerCallbackQuery({ show_alert: true, text: "权限不足" });
     return;
   }
@@ -286,7 +314,9 @@ callbackHandler.callbackQuery(/^reject:.*/, async (ctx) => {
 });
 callbackHandler.callbackQuery(/^ban:.*/, async (ctx) => {
   const nonce = ctx.callbackQuery.data.slice("ban:".length);
-  if (!(await isAdminForSession(nonce, ctx.from.id))) {
+  const permission = await checkSessionPermission(nonce, ctx.from.id);
+  if (permission === "not_found") return await handleProcessed(ctx);
+  if (permission === "no_permission") {
     await ctx.answerCallbackQuery({ show_alert: true, text: "权限不足" });
     return;
   }
