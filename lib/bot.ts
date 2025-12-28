@@ -136,12 +136,18 @@ async function handleProcessed(ctx: any) {
   });
   if (ctx.callbackQuery.message) {
     const message = ctx.callbackQuery.message;
+    const reply_markup = new InlineKeyboard();
+    if (message.chat.type === "private") {
+      reply_markup.webApp("已由机器人处理", Bun.env.BOT_HOST + "/admin");
+    } else {
+      reply_markup.url(
+        "已由机器人处理",
+        `https://t.me/${bot.botInfo.username}`
+      );
+    }
     waitUntil(
       ctx.api.editMessageReplyMarkup(message.chat.id, message.message_id, {
-        reply_markup: new InlineKeyboard().webApp(
-          "已由机器人处理",
-          Bun.env.BOT_HOST + "/admin"
-        ),
+        reply_markup,
       })
     );
   }
