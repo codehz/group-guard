@@ -345,9 +345,7 @@ callbackHandler.callbackQuery(/^ban:.*/, async (ctx) => {
         );
       else
         waitUntil(
-          ctx.api.editMessageReplyMarkup(message.chat.id, message.message_id, {
-            reply_markup: { inline_keyboard: [] },
-          })
+          deleteMessageSafe(message.chat.id, message.message_id)
         );
     }
   } else {
